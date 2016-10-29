@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+'use strict';
+
+var harExtractor = require('../.');
+
+if (process.argv.length < 3) {
+    console.log('Usage: har-extractor https://www.officemag.ru [count=10] [dist=result.har]');
+    return;
+};
+
+var url = process.argv[2];
+var count = process.argv[3] || undefined;
+var dist = process.argv[4] || undefined;
+
+harExtractor(url, count, dist);

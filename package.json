@@ -1,0 +1,18 @@
+{
+	"name": "har-extractor",
+	"version": "1.0.0",
+	"description": "Extract HAR from browser",
+	"main": "index.js",
+	"author": "Ser-Gen",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/samson-int/har-extractor"
+	},
+	"bin": {
+		"har-extractor": "bin/har-extractor"
+	},
+	"dependencies": {
+		"chrome-har-capturer": "https://github.com/samson-int/chrome-har-capturer.git"
+	}
+}

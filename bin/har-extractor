@@ -4,7 +4,7 @@
 var harExtractor = require('../.');
 
 if (process.argv.length < 3) {
-    console.log('Usage: har-extractor https://www.officemag.ru [count=10] [dist=result.har]');
+    console.log('Использование: har-extractor https://www.officemag.ru [count=10] [dist=result.har]');
     return;
 };
 

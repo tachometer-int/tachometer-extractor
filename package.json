@@ -1,5 +1,5 @@
 {
-	"name": "har-extractor",
+	"name": "tachometer-extractor",
 	"version": "1.0.0",
 	"description": "Extract HAR from browser",
 	"main": "index.js",
@@ -7,12 +7,13 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/samson-int/har-extractor"
+		"url": "https://github.com/tachometer-int/tachometer-extractor"
 	},
 	"bin": {
-		"har-extractor": "bin/har-extractor"
+		"har-extractor": "bin/tachometer-extractor",
+		"tachometer-extractor": "bin/tachometer-extractor"
 	},
 	"dependencies": {
-		"chrome-har-capturer": "https://github.com/samson-int/chrome-har-capturer.git"
+		"chrome-har-capturer": "https://github.com/tachometer-int/chrome-har-capturer.git"
 	}
 }

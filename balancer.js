@@ -1,6 +1,6 @@
-module.exports = balanceHars;
+module.exports = balancer;
 
-function balanceHars (hars, onResult) {
+function balancer (hars, onResult) {
 
 	// нормализуем время начала процессов
 	for (var l = 0; l < hars.length; l++) {

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
-var harExtractor = require('../.');
+var tachometerExtractor = require('../.');
 
 if (process.argv.length < 3) {
-    console.log('Использование: har-extractor https://www.officemag.ru [count=10] [dist=result.har]');
+    console.log('Использование: tachometer-extractor https://www.officemag.ru [10] [result.har]');
     return;
 };
 
@@ -12,4 +12,4 @@ var url = process.argv[2];
 var count = process.argv[3] || undefined;
 var dist = process.argv[4] || undefined;
 
-harExtractor(url, count, dist);
+tachometerExtractor(url, count, dist);

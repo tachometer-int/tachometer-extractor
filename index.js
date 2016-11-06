@@ -1,9 +1,11 @@
 var fs = require('fs');
 var path = require('path');
 var chc = require('chrome-har-capturer');
-var onHars = require('./balanceHars');
 
-module.exports = harExtractor;
+var balancer = require('./balancer');
+var processor = require('./processor');
+
+module.exports = tachometerExtractor;
 
 /**
  * получатель ХАРов
@@ -11,7 +13,7 @@ module.exports = harExtractor;
  * @param  {number} count количество повторов проверок
  * @param  {string} dist  путь, куда сохранять с указанием расширения
  */
-function harExtractor (url, count, dist) {
+function tachometerExtractor (url, count, dist) {
 	if (typeof url === 'undefined') {
 		console.log('Нужен адрес для проверки');
 		return;
@@ -27,26 +29,36 @@ function harExtractor (url, count, dist) {
 
 	// путь к данным с кешем
 	var distCache = path.join(
-		path.dirname(dist),
-		path.basename(dist, path.extname(dist)) +'.cache.har'
+		path.dirname(distClean),
+		path.basename(distClean, path.extname(distClean)) +'.cache.har'
+	);
+
+	// путь к вычисленным значениям
+	var distData = path.join(
+		path.dirname(distClean),
+		path.basename(distClean, path.extname(distClean)) +'.data.json'
 	);
 
 	// сюда будут записаны полученные данные
-	var hars = [];
+	var harsCache = [];
+	var harsClean = [];
 	
 	// запускаем проверку с кешем
-	start(url, hars, count, onHars, function (har) {
-		fs.writeFileSync(distCache, JSON.stringify(har));
+	start(url, harsCache, count, function (harCache) {
+		fs.writeFileSync(distCache, JSON.stringify(harCache));
 	
 		// и без кеша
-		start(url, hars, count, onHars, function (har) {
-			fs.writeFileSync(distClean, JSON.stringify(har));
+		start(url, harsClean, count, function (harClean) {
+			fs.writeFileSync(distClean, JSON.stringify(harClean));
+
+			// вычисляем и пишем значения
+			fs.writeFileSync(distData, JSON.stringify(processor(harClean, harCache)));
 		}, false);
 	}, true);
 };
 
 // начало работы
-function start (url, hars, count, onHars, onResult, cache) {
+function start (url, hars, count, onResult, cache) {
 	if (count < 1) { return; };
 
 	count--;
@@ -62,12 +74,12 @@ function start (url, hars, count, onHars, onResult, cache) {
 
 			// все получены
 			hars.splice(0, 1);
-			onHars(hars, onResult);
+			balancer(hars, onResult);
 		}
 		else {
 
 			// пока есть, чем заняться
-			start(url, hars, count, onHars, onResult, cache);
+			start(url, hars, count, onResult, cache);
 		};
 	};
 };

@@ -1,4 +1,4 @@
-# har-extractor
+# tachometer-extractor
 
 Инструмент для получения информации о загрузке страницы.
 
@@ -6,7 +6,7 @@
 ## Установка
 
 ```
-npm install -g https://github.com/samson-int/har-extractor.git
+npm install -g https://github.com/tachometer-int/tachometer-extractor.git
 ```
 
 
@@ -21,12 +21,14 @@ start chrome --remote-debugging-port=9222 --enable-benchmarking --enable-net-ben
 После старта хрома модуль запускается командой:
 
 ```
-har-extractor https://www.officemag.ru [count=10] [dist=result.har]
+tachometer-extractor https://www.officemag.ru [10] [result.har]
 ```
 
-* первым параметром должен идти адрес проверяемой страницы
-* `count` — количество измерений
-* `dist` — путь сохранения файлов
+Параметры:
+
+1. адрес проверяемой страницы — обязательно
+2. количество измерений
+3. путь сохранения файлов
 
 Если хром доступен, проверка происходит несколько раз с кешем и без. Перед каждой серией запусков производится одно холостое измерение.
 

@@ -12,13 +12,9 @@ npm install -g https://github.com/tachometer-int/tachometer-extractor.git
 
 ## Работа
 
-Получает информацию о процессе загрузки через удалённую отладку Хрома. Хром запускается в нужном режиме командой:
+Получает информацию о процессе загрузки через удалённую отладку Хрома.
 
-```
-start chrome --remote-debugging-port=9222 --enable-benchmarking --enable-net-benchmarking
-```
-
-После старта хрома модуль запускается командой:
+Модуль запускается командой:
 
 ```
 tachometer-extractor https://www.officemag.ru [10] [result.har]

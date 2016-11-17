@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var spawn = require('child_process').spawn;
 var chc = require('chrome-har-capturer');
 
 var balancer = require('./balancer');
@@ -42,19 +43,33 @@ function tachometerExtractor (url, count, dist) {
 	// сюда будут записаны полученные данные
 	var harsCache = [];
 	var harsClean = [];
-	
-	// запускаем проверку с кешем
-	start(url, harsCache, count, function (harCache) {
-		fs.writeFileSync(distCache, JSON.stringify(harCache));
-	
-		// и без кеша
-		start(url, harsClean, count, function (harClean) {
-			fs.writeFileSync(distClean, JSON.stringify(harClean));
 
-			// вычисляем и пишем значения
-			fs.writeFileSync(distData, JSON.stringify(processor(harClean, harCache)));
-		}, false);
-	}, true);
+	// стартуем хром
+	var chrome = spawn('chrome', [
+		'--remote-debugging-port=9222',
+		'--enable-benchmarking',
+		'--enable-net-benchmarking'
+	]);
+
+	// ждём загрузки хрома
+	setTimeout(function () {
+	
+		// запускаем проверку с кешем
+		start(url, harsCache, count, function (harCache) {
+			fs.writeFileSync(distCache, JSON.stringify(harCache));
+
+			// и без кеша
+			start(url, harsClean, count, function (harClean) {
+				fs.writeFileSync(distClean, JSON.stringify(harClean));
+
+				// вычисляем и пишем значения
+				fs.writeFileSync(distData, JSON.stringify(processor(harClean, harCache)));
+
+				// выключаем хром
+				chrome.kill();
+			}, false);
+		}, true);
+	}, 1000)
 };
 
 // начало работы
@@ -94,17 +109,18 @@ function getHar (url, cache, cb) {
 	var getStart;
 
 	c.once('connect', function () {
-		console.log('Connected to Chrome');
+		console.log('Подключен к хрому');
 		getStart = new Date().getTime();
 	});
 	c.once('end', function (har) {
-		console.log('Collected data');
+		console.log('Собрал данные');
 
 		// определяем продолжительность получения данных
 		har._duration = new Date().getTime() - getStart;
 		cb(har);
 	});
 	c.once('error', function (err) {
-		console.error('Cannot connect to Chrome: ' + err);
+		console.error('Не удаётся подключиться к хрому. Убедитесь, что он запущен.');
+		console.error(err);
 	});
 };

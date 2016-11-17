@@ -33,9 +33,18 @@ function balancer (hars, onResult) {
 	for (var i = 1; i < hars.length; i++) {
 		var har = hars[i].log;
 
-		// вычисляем среднее по основным показателям
-		for (key in result.log.pages[0].pageTimings) {
-			result.log.pages[0].pageTimings[key] = (result.log.pages[0].pageTimings[key] + har.pages[0].pageTimings[key]) / 2;
+		// готовим подсчёт медианы по основным показателям
+		var pageTimings = result.log.pages[0].pageTimings;
+		var pageTimingsHar = har.pages[0].pageTimings;
+
+		for (key in pageTimings) {
+			mediator(key, pageTimings, pageTimingsHar);
+
+			// считаем медиану от времени выполнения
+			if (i + 1 === hars.length) {
+				if (!isNumber(pageTimings[key])) { continue; };
+				pageTimings[key] = findMedian(pageTimings._median[key]);
+			};
 		};
 
 		// суммируем запросы
@@ -69,6 +78,26 @@ function balancer (hars, onResult) {
 
 	for (var n = 0; n < result.log.entries.length; n++) {
 		var entry = result.log.entries[n];
+
+		if (entry._median) {
+
+			// считаем медиану от времени выполнения
+			entry['time'] = findMedian(entry._median['time']);
+
+			// считаем медиану от времени начала
+			entry['startedDateTime'] = findMedian(entry._median['startedDateTime']);
+		};
+
+		// считаем медиану от составляющих выполнения
+		if (entry.timings._median) {
+			for (key in _entry.timings) {
+				if (!isNumber(entry.timings[key])) { continue; };
+
+				if (entry.timings[key] > -1 && _entry.timings[key] > -1) {
+					entry.timings[key] = findMedian(entry.timings._median[key]);
+				};
+			};
+		};
 
 		// ограничиваем время неадекватно долгих записей
 		if (entry.startedDateTime + entry.time > result._duration) {
@@ -108,18 +137,18 @@ function balanceEntry (_entry, resultEntries) {
 		// если запрос по одному адресу
 		if (entry.request.url === _entry.request.url) {
 
-			// считаем среднее от времени выполнения
-			entry.time = (entry.time + _entry.time) / 2;
+			// готовим подсчёт медианы от времени выполнения
+			mediator('time', entry, _entry);
 
-			// считаем среднее от составляющих выполнения
+			// готовим подсчёт медианы от составляющих выполнения
 			for (key in _entry.timings) {
 				if (entry.timings[key] > -1 && _entry.timings[key] > -1) {
-					entry.timings[key] = (entry.timings[key] + _entry.timings[key]) / 2;
+					mediator(key, entry.timings, _entry.timings);
 				};
 			};
 
-			// считаем среднее от времени начала
-			entry.startedDateTime = (entry.startedDateTime + _entry.startedDateTime) / 2;
+			// готовим подсчёт медианы от времени начала
+			mediator('startedDateTime', entry, _entry);
 
 			// если запись есть
 			isFound = true;
@@ -134,4 +163,40 @@ function balanceEntry (_entry, resultEntries) {
 	else {
 		return true;
 	};
+};
+
+// вычислитель медианы
+function mediator (key, a, b) {
+	if (!isNumber(a[key])) { return; };
+
+	if (!a._median) {
+		a._median = {};
+	};
+	if (!a._median[key]) {
+		a._median[key] = [];
+		a._median[key].push(a[key]);
+	};
+
+	a._median[key].push(b[key]);
+};
+
+// ищет медиану в массиве
+function findMedian (data) {
+	data.sort(function(a,b) {
+		return a - b;
+	});
+
+	var half = Math.floor(data.length / 2);
+
+	if (data.length % 2) {
+		return data[half];
+	}
+	else {
+		return (data[half-1] + data[half]) / 2.0;
+	};
+};
+
+// передано ли число
+function isNumber (n) {
+	return typeof n === 'number';
 };

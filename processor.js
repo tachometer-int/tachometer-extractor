@@ -17,6 +17,11 @@ function processor (harClean, harCache) {
 		// всего загружено
 		total_download_own: data.data.total.size - data.data.third.size,
 		total_download_third: data.data.third.size,
+		
+		// загрузка до событий
+		dom_content_load_download: data.data.total.onContentLoadTransfer,
+		onload_download: data.data.total.onLoadTransfer,
+		finish_download: data.data.total.sizeTransfer - data.data.total.onContentLoadTransfer - data.data.total.onLoadTransfer,
 
 		// всего запросов
 		total_entries_own: data.data.total.entries.length - data.data.third.entries.length,
@@ -55,7 +60,12 @@ function processor (harClean, harCache) {
 		finish_time_cache: dataCache.time.finish,
 
 		// размер с кешем
-		total_download_cache: dataCache.data.total.sizeTransfer
+		total_download_cache: dataCache.data.total.sizeTransfer,
+
+		// загрузка до событий
+		dom_content_load_download_cache: dataCache.data.total.onContentLoadTransfer,
+		onload_download_cache: dataCache.data.total.onLoadTransfer,
+		finish_download_cache: dataCache.data.total.sizeTransfer - dataCache.data.total.onContentLoadTransfer - dataCache.data.total.onLoadTransfer
 	};
 };
 
@@ -65,6 +75,9 @@ function getData (har) {
 	var total = 0;
 	var totalThird = 0;
 	var totalTransfer = 0;
+
+	var totalTransferOnContentLoad = 0;
+	var totalTransferOnLoad = 0;
 
 	var totalImg = 0;
 	var totalImgThird = 0;
@@ -102,12 +115,25 @@ function getData (har) {
 		total += sizeEncoded;
 		totalTransfer += sizeTransfer;
 
-		if (
-			uniqEntry.indexOf(entry.request.url) === -1
-			&& finish < new Date(entry.startedDateTime).getTime() - start + entry.time
-		) {
-			uniqEntry.push(entry.request.url);
-			finish = new Date(entry.startedDateTime).getTime() - start + entry.time;
+		// работаем с уникальными запросами
+		if (uniqEntry.indexOf(entry.request.url) === -1) {
+
+			if (
+				new Date(entry.startedDateTime).getTime() - start + entry.time < data.pages[0].pageTimings.onContentLoad
+			) {
+				totalTransferOnContentLoad += sizeTransfer;
+			}
+			else if (
+				new Date(entry.startedDateTime).getTime() - start + entry.time < data.pages[0].pageTimings.onLoad
+			) {
+				totalTransferOnLoad += sizeTransfer;
+			};
+
+			// увеличиваем время до окончания загрузки
+			if (finish < new Date(entry.startedDateTime).getTime() - start + entry.time) {
+				uniqEntry.push(entry.request.url);
+				finish = new Date(entry.startedDateTime).getTime() - start + entry.time;
+			};
 		};
 
 		if (entry.response.content.mimeType.match(/image.*/)) {
@@ -186,6 +212,12 @@ function getData (har) {
 
 				// размер переданный
 				sizeTransfer: totalTransfer,
+
+				// переданный до onContentLoad
+				onContentLoadTransfer: totalTransferOnContentLoad,
+
+				// переданный до onLoad
+				onLoadTransfer: totalTransferOnLoad,
 
 				// запросы
 				entries: data.entries

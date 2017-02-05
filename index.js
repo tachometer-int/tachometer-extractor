@@ -1,5 +1,6 @@
 var fs = require('fs');
 var path = require('path');
+var exec = require('child_process').execSync;
 var spawn = require('child_process').spawn;
 var chc = require('chrome-har-capturer');
 
@@ -43,6 +44,9 @@ function tachometerExtractor (url, count, dist) {
 	// сюда будут записаны полученные данные
 	var harsCache = [];
 	var harsClean = [];
+
+	// отключаем все хромы перед работой
+	exec('TASKKILL /F /IM chrome.exe');
 
 	// стартуем хром
 	var chrome = spawn('chrome', [

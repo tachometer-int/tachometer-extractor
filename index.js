@@ -46,7 +46,7 @@ function tachometerExtractor (url, count, dist) {
 	var harsClean = [];
 
 	// отключаем все хромы перед работой
-	exec('TASKKILL /F /IM chrome.exe');
+	exec('taskkill /f /im chrome.exe /fi "memusage gt 2"');
 
 	// стартуем хром
 	var chrome = spawn('chrome', [

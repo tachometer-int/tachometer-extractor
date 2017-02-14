@@ -53,7 +53,9 @@ function tachometerExtractor (url, count, dist) {
 		'--remote-debugging-port=9222',
 		'--enable-benchmarking',
 		'--enable-net-benchmarking'
-	]);
+	]).on('error', function (e) {
+		throw e;
+	});
 
 	// ждём загрузки хрома
 	setTimeout(function () {

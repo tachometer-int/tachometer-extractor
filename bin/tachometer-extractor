@@ -3,13 +3,70 @@
 
 var tachometerExtractor = require('../.');
 
+// если передано недостаточное количество параметров
 if (process.argv.length < 3) {
-    console.log('Использование: tachometer-extractor https://www.officemag.ru [10] [result.har]');
-    return;
+	console.log('Использование: tachometer-extractor url=https://www.officemag.ru [count=10] [dist=result.har]');
+	return;
 };
 
-var url = process.argv[2];
-var count = process.argv[3] || undefined;
-var dist = process.argv[4] || undefined;
+var path = require('path');
+var fs = require('fs');
 
-tachometerExtractor(url, count, dist);
+var cfg = {};
+
+for (var index = 2; index < process.argv.length; index++) {
+	var option = process.argv[index];
+	
+	// для работы именованных параметров
+	if (option.match(/^[a-z]*=/)) {
+		cfg[option.match(/^([a-z]*)=/)[1]] = option.replace(/^[a-z]*=/, '');
+	}
+
+	// неименованные параметры пока будут работать
+	else {
+		switch (index) {
+			case 2:
+				cfg.url = option;
+				break;
+			
+			case 3:
+				cfg.count = option;
+				break;
+			
+			case 4:
+				cfg.dist = option;
+				break;
+		
+			default:
+				break;
+		}
+	};
+};
+
+// если передан путь к файлу настроек
+if (typeof cfg.cfg !== 'undefined' && cfg.cfg) {
+
+	// путь к настройкам
+	var cfgPath = path.join(process.cwd(), process.argv[2].split('=')[1]);
+
+	// если файл настроек есть
+	if (fs.existsSync(cfgPath)) {
+
+		// читаем
+		fs.readFile(cfgPath, 'utf8', function (err, data) {
+			if (err) {
+				throw 'Не удалось прочесть файл настроек';
+			};
+
+			tachometerExtractor(JSON.parse(data));
+		});
+	}
+	else {
+		throw 'Не удалось найти файл настроек';
+	};
+}
+
+// если переданы параметры
+else {
+	tachometerExtractor(cfg);
+};

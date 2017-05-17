@@ -19,14 +19,21 @@ npm install -g https://github.com/tachometer-int/tachometer-extractor.git
 Модуль запускается командой:
 
 ```
-tachometer-extractor https://www.officemag.ru [10] [result.har]
+tachometer-extractor url=https://www.officemag.ru [count=10] [dist=result.har] [prepare=]
+```
+
+или
+
+```
+tachometer-extractor cfg=cfg.json
 ```
 
 Параметры:
 
-1. адрес проверяемой страницы — обязательно
-2. количество измерений
-3. путь сохранения файлов
+* `url` — адрес проверяемой страницы — обязательно
+* `count` — количество измерений
+* `dist` — путь сохранения файлов
+* `prepare` — ДжС-функция, которая будет выполнена в конце первого холостого запуска с кешем. То есть, перед измерениями теста.
 
 Если хром доступен, проверка происходит несколько раз с кешем и без. Перед каждой серией запусков производится одно холостое измерение.
 

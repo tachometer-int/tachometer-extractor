@@ -11,23 +11,29 @@ module.exports = tachometerExtractor;
 
 /**
  * получатель ХАРов
- * @param  {string} url   адрес проверяемой страницы
- * @param  {number} count количество повторов проверок
- * @param  {string} dist  путь, куда сохранять с указанием расширения
+ * @param  {object} cfg объект с настройками
  */
-function tachometerExtractor (url, count, dist) {
-	if (typeof url === 'undefined') {
+function tachometerExtractor (cfg) {
+	if (typeof cfg.url === 'undefined') {
 		console.log('Нужен адрес для проверки');
 		return;
 	};
 
-	// количество повторов
-	count = count || 10;
-	count++;
+	// адрес проверяемой страницы
+	var url = cfg.url;
+
+	// количество повторов проверок
+	var count = parseInt(cfg.count, 10) || 10;
+
+	// путь, куда сохранять с указанием расширения
+	var dist = cfg.dist || path.join(process.cwd(), 'result.har');
+
+	// скрипт для подготовки теста
+	var prepareScript = cfg.prepare || '';
 
 	// путь к данным без кеша
-	distClean = dist || path.join(process.cwd(), 'result.har');
-	distClean = path.normalize(distClean);
+	var distClean = cfg.dist || path.join(process.cwd(), 'result.har');
+	var distClean = path.normalize(distClean);
 
 	// путь к данным с кешем
 	var distCache = path.join(
@@ -45,27 +51,32 @@ function tachometerExtractor (url, count, dist) {
 	var harsCache = [];
 	var harsClean = [];
 
+	// первый запуск — холостой
+	count++;
+
 	// отключаем все хромы перед работой
 	exec('taskkill /f /im chrome.exe /fi "memusage gt 2"');
 
 	// стартуем хром
 	var chrome = spawn('chrome', [
-		'--remote-debugging-port=9222',
-		'--enable-benchmarking',
-		'--enable-net-benchmarking'
-	]).on('error', function (e) {
-		throw e;
-	});
+		'--remote-debugging-port=9222'
+	]);
 
 	// ждём загрузки хрома
 	setTimeout(function () {
-	
+		var prepare = '';
+
+		if (prepareScript) {
+			prepare = prepareScript;
+			prepareScript = '';
+		};
+
 		// запускаем проверку с кешем
-		start(url, harsCache, count, function (harCache) {
+		start(url, harsCache, count, true, prepare, function (harCache) {
 			fs.writeFileSync(distCache, JSON.stringify(harCache));
 
 			// и без кеша
-			start(url, harsClean, count, function (harClean) {
+			start(url, harsClean, count, false, prepare, function (harClean) {
 				fs.writeFileSync(distClean, JSON.stringify(harClean));
 
 				// вычисляем и пишем значения
@@ -73,17 +84,17 @@ function tachometerExtractor (url, count, dist) {
 
 				// выключаем хром
 				chrome.kill();
-			}, false);
-		}, true);
+			});
+		});
 	}, 1000)
 };
 
 // начало работы
-function start (url, hars, count, onResult, cache) {
+function start (url, hars, count, cache, prepare, onResult) {
 	if (count < 1) { return; };
 
 	count--;
-	getHar(url, cache, onHar);
+	getHar(url, cache, prepare, onHar);
 
 	// хар получен
 	function onHar (har) {
@@ -100,17 +111,18 @@ function start (url, hars, count, onResult, cache) {
 		else {
 
 			// пока есть, чем заняться
-			start(url, hars, count, onResult, cache);
+			start(url, hars, count, cache, prepare, onResult);
 		};
 	};
 };
 
 // получение хара
-function getHar (url, cache, cb) {
+function getHar (url, cache, prepare, cb) {
 	var c = chc.load(url, {
 		cache: cache,
 		onLoadDelay: 10000,
-		onLastResponseDelay: 3000
+		onLastResponseDelay: 3000,
+		prepare: prepare
 	});
 	var getStart;
 

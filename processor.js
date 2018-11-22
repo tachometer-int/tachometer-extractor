@@ -1,3 +1,5 @@
+var url = require('url');
+
 module.exports = processor;
 
 function processor (harClean, harCache) {
@@ -103,6 +105,9 @@ function getData (har) {
 
 	var third = [];
 
+	var currentPath = url.parse(data.pages[0].title);
+	var basePath = '://'+ currentPath.host;
+
 	var start = new Date(data.pages[0].startedDateTime).getTime();
 	var uniqEntry = [];
 	var finish = 0;
@@ -150,7 +155,7 @@ function getData (har) {
 				totalGif += sizeEncoded;
 			};
 
-			if (!entry.request.url.match(/officemag\.ru\//)) {
+			if (!entry.request.url.match(basePath)) {
 				imagesThird.push(entry);
 				totalImgThird += sizeEncoded;
 			};
@@ -159,7 +164,7 @@ function getData (har) {
 			scripts.push(entry)
 			totalScript += sizeEncoded;
 
-			if (!entry.request.url.match(/officemag\.ru\//)) {
+			if (!entry.request.url.match(basePath)) {
 				scriptsThird.push(entry);
 				totalScriptThird += sizeEncoded;
 			};
@@ -168,13 +173,13 @@ function getData (har) {
 			styles.push(entry)
 			totalStyle += sizeEncoded;
 
-			if (!entry.request.url.match(/officemag\.ru\//)) {
+			if (!entry.request.url.match(basePath)) {
 				stylesThird.push(entry);
 				totalStyleThird += sizeEncoded;
 			};
 		};
 
-		if (!entry.request.url.match(/officemag\.ru\//)) {
+		if (!entry.request.url.match(basePath)) {
 			totalThird += sizeEncoded;
 			third.push(entry);
 		};
